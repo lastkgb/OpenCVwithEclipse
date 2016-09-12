@@ -14,7 +14,7 @@
 using namespace cv;
 using namespace std;
 
-void cartoonifyImage(Mat srcColor, Mat dst, bool sketchMode, bool alienMode, bool evilMode, int debugType);
+void cartoonifyImage(Mat src, Mat dst, bool sketchMode, bool alienMode, bool evilMode, int debugType);
 void drawFaceStickFigure(Mat dst);
 void changeFacialSkinColor(Mat smallImgBGR, Mat bigEdges, int debugType);
 void removePepperNoise(Mat &mask);
