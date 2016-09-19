@@ -5,9 +5,9 @@
  *      Author: lastkgb
  */
 
-#include "cartoon.h"
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
+#include "cartoon.h"
 
 void cartoonifyImage(Mat src, Mat dst, bool sketchMode, bool alienMode, bool evilMode, int debugType)
 {
@@ -66,11 +66,6 @@ void cartoonifyImage(Mat src, Mat dst, bool sketchMode, bool alienMode, bool evi
 	return;
 }
 
-void drawFaceStickFigure(Mat dst)
-{
-
-}
-
 void changeFacialSkinColor(Mat smallImgBGR, Mat bigEdges, int debugType)
 {
 	Mat yuv = Mat(smallImgBGR.size(), CV_8UC3);
@@ -107,21 +102,111 @@ void changeFacialSkinColor(Mat smallImgBGR, Mat bigEdges, int debugType)
 	Mat edgeMask = mask.clone();
 	for (int i=0; i<NUM_SKIN_POINTS; i++) {
 		const int flags = 4 | FLOODFILL_FIXED_RANGE | FLOODFILL_MASK_ONLY;
-		floodFill(yuv, maskPlusBorder, skinPts[i], scalar(), NULL, lowerDiff, upperDiff, flags);
+		floodFill(yuv, maskPlusBorder, skinPts[i], Scalar(), NULL, lowerDiff, upperDiff, flags);
 		if (debugType >= 1)
 			circle(smallImgBGR, skinPts[i], 5, CV_RGB(0, 0, 255), 1, CV_AA);
 	}
 
+	if (debugType >= 2)
+		imshow("flood mask", mask*120);
 
+	mask -= edgeMask;
+
+	int Red = 0;
+	int Green = 70;
+	int Blue = 0;
+	add (smallImgBGR, Scalar(Blue, Green, Red), smallImgBGR, mask);
+
+	return;
 }
 
 void removePepperNoise(Mat &mask)
 {
+	for (int y=2; y<mask.rows-2; y++) {
+		uchar *pThis = mask.ptr(y);
+		uchar *pUp1 = mask.ptr(y-1);
+		uchar *pUp2 = mask.ptr(y-2);
+		uchar *pDown1 = mask.ptr(y+1);
+		uchar *pDown2 = mask.ptr(y+2);
 
+		pThis += 2;
+		pUp1 += 2;
+		pUp2 += 2;
+		pDown1 += 2;
+		pDown2 += 2;
+		for (int x=2; x<mask.cols-2; x++) {
+			uchar v = *pThis;
+			if (v == 0) {
+				bool allAbove = *(pUp2-2) && *(pUp2-1) && *(pUp2) && *(pUp2+1) && *(pUp2+2);
+				bool allLeft = *(pUp1-2) && *(pThis-2) && *(pDown1-2);
+				bool allBelow = *(pDown2-2) && *(pDown2-1) && *(pDown2) && *(pDown2+1) && *(pDown2+2);
+				bool allRight = *(pUp1+2) && *(pThis+2) && *(pDown1+2);
+				bool surroundings = allAbove && allLeft && allBelow && allRight;
+
+				if (surroundings) {
+					*(pUp1-1) = 255;
+					*(pUp1) = 255;
+					*(pUp1+1) = 255;
+					*(pThis-1) = 255;
+					*(pThis) = 255;
+					*(pThis+1) = 255;
+					*(pDown1-1) = 255;
+					*(pDown1) = 255;
+					*(pDown1+1) = 255;
+				}
+				pThis += 2;
+				pUp1 += 2;
+				pUp2 += 2;
+				pDown1 += 2;
+				pDown2 += 2;
+			}
+			pThis++;
+			pUp1++;
+			pUp2++;
+			pDown1++;
+			pDown2++;
+		}
+	}
+
+	return;
 }
 
 void drawFaceStickFigure(Mat dst)
 {
+	Size size = dst.size();
+	int sw = size.width;
+	int sh = size.height;
 
+	Mat faceOutline = Mat::zeros(size, CV_8UC3);
+	Scalar color = CV_RGB(255,255,0);
+	int thickness = 4;
+	int faceH = sh/2 * 70/100;
+	int faceW = faceH * 72/100;
+	ellipse(faceOutline, Point(sw/2,sh/2), Size(faceW, faceH), 0, 0, 360, color, thickness, CV_AA);
+
+	int eyeW = faceW * 23/100;
+	int eyeH = faceH * 11/100;
+	int eyeX = faceW * 48/100;
+	int eyeY = faceH * 13/100;
+	int eyeA = 15;
+	int eyeYshift = 11;
+	ellipse(faceOutline, Point(sw/2-eyeX, sh/2-eyeY), Size(eyeW, eyeH), 0, 180+eyeA, 360-eyeA, color, thickness, CV_AA);
+	ellipse(faceOutline, Point(sw/2-eyeX, sh/2-eyeY-eyeYshift), Size(eyeW, eyeH), 0, 0+eyeA, 180-eyeA, color, thickness, CV_AA);
+	ellipse(faceOutline, Point(sw/2+eyeX, sh/2-eyeY), Size(eyeW, eyeH), 0, 180+eyeA, 360-eyeA, color, thickness, CV_AA);
+	ellipse(faceOutline, Point(sw/2+eyeX, sh/2-eyeY-eyeYshift), Size(eyeW, eyeH), 0, 0+eyeA, 180-eyeA, color, thickness, CV_AA);
+
+	int mouthY = faceH * 53/100;
+	int mouthW = faceW * 45/100;
+	int mouthH = faceH * 6/100;
+	ellipse(faceOutline, Point(sw/2, sh/2+mouthY), Size(mouthW, mouthH), 0, 0, 180, color, thickness, CV_AA);
+
+	int fontFace = FONT_HERSHEY_COMPLEX;
+	float fontScale = 1.0f;
+	int fontThickness = 2;
+	putText(faceOutline, "Put your face here", Point(sw*23/100, sh*10/100), fontFace, fontScale, color, fontThickness, CV_AA);
+
+	addWeighted(dst, 1.0, faceOutline, 0.7, 0, dst, CV_8UC3);
+
+	return;
 }
 
