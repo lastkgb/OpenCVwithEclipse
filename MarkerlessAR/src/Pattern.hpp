@@ -10,6 +10,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "GeometryTypes.hpp"
+#include "CameraCalibration.hpp"
+
 struct Pattern
 {
 	cv::Size size;

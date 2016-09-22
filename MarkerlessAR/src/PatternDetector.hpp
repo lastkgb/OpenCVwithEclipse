@@ -47,10 +47,10 @@ private:
 	std::vector<cv::KeyPoint> m_queryKeypoints;
 	cv::Mat m_queryDescriptors;
 	std::vector<cv::DMatch> m_matches;
-	std::vector<std::vector<cv::DMatch>> m_knnMatches;
+	std::vector< std::vector<cv::DMatch> > m_knnMatches;
 
 	cv::Mat m_grayImg;
-	cv::Mat m_wrapedImg;
+	cv::Mat m_warpedImg;
 	cv::Mat m_roughHomography;
 	cv::Mat m_refinedHomography;
 
