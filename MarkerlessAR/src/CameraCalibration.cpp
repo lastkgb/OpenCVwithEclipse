@@ -44,6 +44,11 @@ const cv::Matx33f& CameraCalibration::getIntrinsic() const
 	return m_intrinsic;
 }
 
+const cv::Mat_<float>&  CameraCalibration::getDistortion() const
+{
+	return m_distortion;
+}
+
 float& CameraCalibration::fx()
 {
 	return m_intrinsic(1,1);

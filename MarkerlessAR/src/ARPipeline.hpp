@@ -17,7 +17,7 @@ class ARPipeline
 public:
 	ARPipeline(const cv::Mat& patternImage, const CameraCalibration& calibration);
 
-	bool precessFrame(const cv::Mat& inputFrame);
+	bool processFrame(const cv::Mat& inputFrame);
 	const Transformation& getPatternLocation() const;
 	PatternDetector m_patternDetector;
 
